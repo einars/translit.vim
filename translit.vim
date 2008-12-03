@@ -15,24 +15,29 @@
 "    used as my playground for learning vimscript.
 "
 "
-"  Variables:
+"  Configuration:
 "
-"    g:cursor_follows_alphabet 0/1
-"    Changes cursor background to red when in translit mode.
+"    g:translit_cursor_bg <color>
+"    Cursor color for gvim when in the transliteration mode. Default = red.
 "
 "    g:translit_map "translit.ru"
-"    Sets the keyboard mapping scheme. Currently only translit.ru and PLanslit
-"    maps are supported.
+"    Sets the initial keyboard mapping scheme. Currently "translit.ru",
+"    "PLanslit" and "greek" are supported.
 "
 "    g:translit_toggle_keymap "<C-T>"
 "    Default keybinding to toggle translit mode, Ctrl-Shift-t.
 "
+"    If you want to use multiple transliteration maps, setup the transliteration
+"    map with a call to TranslitAddMapping(name, table), where mapping is in
+"    format "keys1:map1, keys2:map2", whitespace is stripped, see end of the
+"    source file, and set up the keyboard shortcuts with TranslitSetupShortcut:
+"
+"    call TranslitSetupShortcut('<C-G>', 'greek')
 "
 "  Usage:
 "
 "    Drop plugin under ~/.vim/plugins and switch translit mode on/off with
 "    Ctrl-Shift-t.
-"    Commands :TranslitOn, :TranslitOff and :ToggleTranslit are also available.
 "
 "
 "  Custom Translit Maps:
@@ -50,13 +55,12 @@
 "    but currently it's not possible.
 "
 
-let s:is_translit_on = 0
-let s:translit_cursor_bg_save = 'NONE'
+let s:translit_cursor_bg_save = ''
 let s:translit_maps = []
+let s:translit_keys_remapped = []
 
-
-if !exists("g:cursor_follows_alphabet")
-    let g:cursor_follows_alphabet = 1
+if !exists("g:translit_cursor_bg")
+    let g:cursor_follows_alphabet = 'red'
 endif
 
 if !exists("g:translit_map")
@@ -68,18 +72,134 @@ if ! exists('g:translit_toggle_keymap')
 endif
 
 
-command! TranslitOn call TranslitOn()
 command! TranslitOff call TranslitOff()
 command! ToggleTranslit call ToggleTranslit()
 
-if g:translit_toggle_keymap != ''
-    exec 'inoremap ' . g:translit_toggle_keymap . ' <C-r>=ToggleTranslit()<CR>'
-    exec 'nnoremap ' . g:translit_toggle_keymap . ' :ToggleTranslit<CR>'
-endif
+
+
+function TranslitMapKey(key, result)
+    exec 'inoremap ' . a:key . ' ' . a:result
+    call insert(s:translit_keys_remapped, a:key)
+endfunction
+
+
+function TranslitReleaseKeys()
+    for key in s:translit_keys_remapped
+        exec 'silent! iunmap ' . key
+    endfor
+    let s:translit_keys_remapped = []
+endfunction
+
+
+function TranslitReleaseCursor()
+    if g:cursor_follows_alphabet && s:translit_cursor_bg_save && g:translit_cursor_bg
+        exec 'highlight Cursor guibg=' . s:translit_cursor_bg_save
+    endif
+endfunction
+
+
+function TranslitCaptureCursor()
+    if g:cursor_follows_alphabet && g:translit_cursor_bg && ! s:translit_cursor_bg_save
+        if g:translit_cursor_bg
+            if 1 s:translit_cursor_bg_save
+                let s:translit_cursor_bg_save = synIDattr(synIDtrans(hlID("Cursor")), "bg")
+            endif
+            exec 'highlight Cursor guibg=' . g:translit_cursor_bg
+        endif
+    endif
+endfunction
+
+
+function TranslitMapKeys(translation_def)
+    for def in split(a:translation_def, ',')
+
+        " trim whitespace
+        let def = substitute(def, '\s', '', 'g')
+
+        let [str_from, str_to] = split(def, ':')
+
+        call TranslitMapKey(str_from, str_to)
+
+        if str_from !=# toupper(str_from) && str_from ==# tolower(str_from) " case-sensitive comparison
+            " shh -> SHH
+            let str_from_upper = toupper(str_from)
+            let str_to_upper = toupper(str_to)
+            call TranslitMapKey(str_from_upper, str_to_upper)
+
+            " and if needed, then map on uppercase-first letter as well
+            " shh -> Shh
+            let str_from_ucfirst = substitute(str_from, '^.', '\U&', '')
+
+            if str_from_ucfirst !=# str_from && str_from_ucfirst !=# str_from_upper
+                call TranslitMapKey(str_from_ucfirst, str_to_upper)
+            endif
+        endif
+    endfor
+endfunction
+
+
+function TranslitGetMapping(name)
+    for [name, mapping] in s:translit_maps
+        if name ==? a:name
+            return mapping
+        endif
+    endfor
+    echom 'translit.vim: mapping "' . name . '" was not found.'
+    return ''
+endfunction
+
+
+function! Translit(name)
+
+    if len(s:translit_keys_remapped) > 0
+        call TranslitReleaseCursor()
+        call TranslitReleaseKeys()
+
+        " act as toggle
+        if g:translit_map == a:name
+            echom 'Transliteration off'
+            return ''
+        endif
+
+    endif
+
+    let table = TranslitGetMapping(a:name)
+    if table != ''
+        echom 'Using ' . a:name . ' transliteration'
+        call TranslitCaptureCursor()
+        let g:translit_map = a:name
+        call TranslitMapKeys(table)
+    endif
+    return ''
+endfunction
+
+
+function TranslitOff()
+    call TranslitReleaseCursor()
+    call TranslitReleaseKeys()
+endfunction
+
+
+function! ToggleTranslit()
+    call Translit(g:translit_map)
+    return ''
+endfunction
+
+
+function! TranslitSetupShortcut(keymap, name)
+    if a:keymap != ''
+        exec 'inoremap ' . a:keymap . ' <C-r>=Translit("' . a:name . '")<CR>'
+        exec 'nnoremap ' . a:keymap . ' :exec Translit("' . a:name . '")<CR>'
+    endif
+endfunction
 
 function TranslitAddMapping(name, mapping)
     call insert(s:translit_maps, [a:name, a:mapping])
 endfunction
+
+
+
+
 
 
 " a minor problem: colon (:) and comma (,) may not be remapped
@@ -96,80 +216,11 @@ call TranslitAddMapping("planslit",
     \ 'c:ц, cz:ч, sz:ш, szcz:щ, ~`:Ъ, `:ъ, y:ы, ~'':Ь, '':ь, e'':э, ju:ю, ja:я')
 
 
-function! ToggleTranslit()
-    if s:is_translit_on
-        TranslitOff
-    else
-        TranslitOn
-    endif
-    return ''
-endfunction
+call TranslitAddMapping("greek",
+    \ 'a:α, b:β, v:β, g:γ, d:δ, e:ε, z:ζ, h:η, th:θ, u:θ, i:ι, k:κ, l:λ, m:μ, n:ν, x:ξ,' .
+    \ 'o:ο, p:π, r:ρ, s:σ, t:τ, y:υ, f:φ, ch:χ, ps:ψ, w:ω')
 
 
+call TranslitSetupShortcut(g:translit_toggle_keymap, g:translit_map)
+" call TranslitSetupShortcut('<C-G>', 'greek')
 
-function TranslitMapKey(key, result)
-    exec 'inoremap ' . a:key . ' ' . a:result
-endfunction
-
-
-function TranslitUnmapKey(key, result)
-    exec 'silent! iunmap ' . a:key
-endfunction
-
-
-function TranslitApply(translation_def, callback)
-    for def in split(a:translation_def, ',')
-
-        " trim whitespace
-        let def = substitute(def, '\s', '', 'g')
-
-        let [str_from, str_to] = split(def, ':')
-
-        exec 'call ' . a:callback . '(str_from, str_to)'
-
-        if str_from !=# toupper(str_from) && str_from ==# tolower(str_from) " case-sensitive comparison
-            " shh -> SHH
-            let str_from_upper = toupper(str_from)
-            let str_to_upper = toupper(str_to)
-            exec 'call ' . a:callback . '(str_from_upper, str_to_upper)'
-
-            " and if needed, then map on uppercase-first letter as well
-            " shh -> Shh
-            let str_from_ucfirst = substitute(str_from, '^.', '\U&', '')
-
-            if str_from_ucfirst !=# str_from && str_from_ucfirst !=# str_from_upper
-                exec 'call ' . a:callback . '(str_from_ucfirst, str_to_upper)'
-            endif
-        endif
-    endfor
-endfunction
-
-
-function TranslitGetMapping(name)
-    for [name, mapping] in s:translit_maps
-        if name ==? a:name
-            return mapping
-        endif
-    endfor
-    return ''
-endfunction
-
-
-
-function TranslitOn()
-    let s:is_translit_on = 1
-    if g:cursor_follows_alphabet
-        let s:translit_cursor_bg_save = synIDattr(synIDtrans(hlID("Cursor")), "bg")
-        highlight Cursor guibg = red
-    endif
-    call TranslitApply(TranslitGetMapping(g:translit_map), 'TranslitMapKey')
-endfunction
-
-
-function! TranslitOff()
-    let s:is_translit_on = 0
-    if g:cursor_follows_alphabet
-        exec 'hi Cursor guibg=' . s:translit_cursor_bg_save
-    endif
-    call TranslitApply(TranslitGetMapping(g:translit_map), 'TranslitUnmapKey')
-endfunction
