@@ -60,7 +60,7 @@ let s:translit_maps = []
 let s:translit_keys_remapped = []
 
 if !exists("g:translit_cursor_bg")
-    let g:cursor_follows_alphabet = 'red'
+    let g:translit_cursor_bg = 'red'
 endif
 
 if !exists("g:translit_map")
@@ -92,16 +92,16 @@ endfunction
 
 
 function TranslitReleaseCursor()
-    if g:cursor_follows_alphabet && s:translit_cursor_bg_save && g:translit_cursor_bg
+    if g:cursor_follows_alphabet != 0 && s:translit_cursor_bg_save != '' && g:translit_cursor_bg != ''
         exec 'highlight Cursor guibg=' . s:translit_cursor_bg_save
     endif
 endfunction
 
 
 function TranslitCaptureCursor()
-    if g:cursor_follows_alphabet && g:translit_cursor_bg && ! s:translit_cursor_bg_save
-        if g:translit_cursor_bg
-            if 1 s:translit_cursor_bg_save
+    if g:cursor_follows_alphabet != 0
+        if g:translit_cursor_bg != ''
+            if s:translit_cursor_bg_save == ''
                 let s:translit_cursor_bg_save = synIDattr(synIDtrans(hlID("Cursor")), "bg")
             endif
             exec 'highlight Cursor guibg=' . g:translit_cursor_bg
