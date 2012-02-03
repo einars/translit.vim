@@ -3,10 +3,8 @@ translit.vim
 ============
 
 
-Author:  Einar Lielmanis <einar@bugpipe.org>
-Date:    02 Dec 2008
+Author:  Einar Lielmanis <einars@gmail.com>
 Home:    http://github.com/einars/translit.vim
-         http://www.vim.org/scripts/script.php?script_id=2469
 
 About
 -----
@@ -34,12 +32,7 @@ Sets the initial keyboard mapping scheme. Currently "translit.ru",
 g:translit_toggle_keymap "<C-T>"
 Default keybinding to toggle translit mode, Ctrl-Shift-t.
 
-Set up multiple transliteration maps with the call to TranslitSetupShortcut
-(won't work in .vimrc, though):
-
-    call TranslitSetupShortcut('<C-G>', 'greek')
-
-or in .vimrc:
+Set up multiple transliteration maps in .vimrc, for example:
 
       inoremap <C-G> <C-r>=Translit('greek')<cr>
       nnoremap <C-G> :exec Translit('greek')<cr>
