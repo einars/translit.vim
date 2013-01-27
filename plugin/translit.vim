@@ -70,6 +70,10 @@ if ! exists('g:translit_toggle_keymap')
     let g:translit_toggle_keymap='<C-T>'
 endif
 
+if ! exists('g:cursor_follows_alphabet')
+    let g:cursor_follows_alphabet=0
+endif
+
 
 command! TranslitOff call TranslitOff()
 command! ToggleTranslit call ToggleTranslit()
