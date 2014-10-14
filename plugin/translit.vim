@@ -80,13 +80,13 @@ command! ToggleTranslit call ToggleTranslit()
 
 
 
-function TranslitMapKey(key, result)
+function! TranslitMapKey(key, result)
     exec 'inoremap ' . a:key . ' ' . a:result
     call insert(s:translit_keys_remapped, a:key)
 endfunction
 
 
-function TranslitReleaseKeys()
+function! TranslitReleaseKeys()
     for key in s:translit_keys_remapped
         exec 'silent! iunmap ' . key
     endfor
@@ -94,14 +94,14 @@ function TranslitReleaseKeys()
 endfunction
 
 
-function TranslitReleaseCursor()
+function! TranslitReleaseCursor()
     if g:cursor_follows_alphabet != 0 && s:translit_cursor_bg_save != '' && g:translit_cursor_bg != ''
         exec 'highlight Cursor guibg=' . s:translit_cursor_bg_save
     endif
 endfunction
 
 
-function TranslitCaptureCursor()
+function! TranslitCaptureCursor()
     if g:cursor_follows_alphabet != 0
         if g:translit_cursor_bg != ''
             if s:translit_cursor_bg_save == ''
@@ -113,7 +113,7 @@ function TranslitCaptureCursor()
 endfunction
 
 
-function TranslitMapKeys(translation_def)
+function! TranslitMapKeys(translation_def)
     for def in split(a:translation_def, ',')
 
         " trim whitespace
@@ -141,7 +141,7 @@ function TranslitMapKeys(translation_def)
 endfunction
 
 
-function TranslitGetMapping(name)
+function! TranslitGetMapping(name)
     for [name, mapping] in s:translit_maps
         if name ==? a:name
             return mapping
@@ -177,7 +177,7 @@ function! Translit(name)
 endfunction
 
 
-function TranslitOff()
+function! TranslitOff()
     call TranslitReleaseCursor()
     call TranslitReleaseKeys()
 endfunction
@@ -196,7 +196,7 @@ function! TranslitSetupShortcut(keymap, name)
     endif
 endfunction
 
-function TranslitAddMapping(name, mapping)
+function! TranslitAddMapping(name, mapping)
     call insert(s:translit_maps, [a:name, a:mapping])
 endfunction
 
