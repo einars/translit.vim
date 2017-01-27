@@ -223,6 +223,10 @@ call TranslitAddMapping("greek",
     \ 'a:α, b:β, v:β, g:γ, d:δ, e:ε, z:ζ, h:η, th:θ, u:θ, i:ι, k:κ, l:λ, m:μ, n:ν, x:ξ,' .
     \ 'o:ο, p:π, r:ρ, s:σ, t:τ, y:υ, f:φ, ch:χ, ps:ψ, w:ω')
 
+call TranslitAddMapping ( "translit.sr",
+      \ 'a:а, b:б, v:в, g:г, d:д, dj:ђ, đ:ђ, e:е, z>:ж, >z:ж, ž:ж, zh:ж, z:з, i:и, j:ј, k:к, ' .
+      \ 'l:л, q:љ, lj:љ, m:м, n:н, w:њ, nj:њ, o:о, p:п, r:р, s:с, t:т,' .
+      \ 'ć:ћ, c'':ћ,''c:ћ, u:у, f:ф, h:х, c:ц, c>:ч, >c:ч, č:ч, ch:ч, dž:џ, dz:џ, sh:ш, s>:ш, >s:ш, š:ш' )
 
 call TranslitSetupShortcut(g:translit_toggle_keymap, g:translit_map)
 " call TranslitSetupShortcut('<C-G>', 'greek')
