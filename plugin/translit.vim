@@ -219,9 +219,11 @@ call TranslitAddMapping("planslit",
     \ 'c:ц, cz:ч, sz:ш, szcz:щ, ~`:Ъ, `:ъ, y:ы, ~'':Ь, '':ь, e'':э, ju:ю, ja:я')
 
 
+" NOTE: not a fan of -i, -y, +i, +y combos, feel free to suggest better
 call TranslitAddMapping("greek",
     \ 'a:α, b:β, v:β, g:γ, d:δ, e:ε, z:ζ, h:η, th:θ, u:θ, i:ι, k:κ, l:λ, m:μ, n:ν, x:ξ,' .
-    \ 'o:ο, p:π, r:ρ, s:σ, t:τ, y:υ, f:φ, ch:χ, ps:ψ, w:ω')
+    \ 'o:ο, p:π, r:ρ, s:σ, t:τ, y:υ, f:φ, ch:χ, ps:ψ, w:ω, ' .
+    \ 'aa:ά, ee:έ, hh:ή, ii:ί, oo:ό, yy:ύ, ww:ώ, -i:ϊ, -y:ϋ, +i:ΐ, +y:ΰ')
 
 call TranslitAddMapping ( "translit.sr",
       \ 'a:а, b:б, v:в, g:г, d:д, dj:ђ, đ:ђ, e:е, z>:ж, >z:ж, ž:ж, zh:ж, z:з, i:и, j:ј, k:к, ' .
